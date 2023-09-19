@@ -2,7 +2,6 @@ import pygame
 import sys
 from models import Cannon, Bullet, Target
 
-pygame.mixer.init(22050, -16, 2, 64)
 pygame.init()
 
 SCREEN_WIDTH = 400
