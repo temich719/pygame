@@ -1,7 +1,8 @@
 import pygame
 import sys
-from pygame.color import THECOLORS
+from models import Cannon, Bullet, Target
 
+pygame.mixer.init(22050, -16, 2, 64)
 pygame.init()
 
 SCREEN_WIDTH = 400
@@ -22,6 +23,10 @@ running = True
 current_hero_frame = start_frame_mario_position
 speed = 10
 
+cannon = Cannon(SCREEN_WIDTH, SCREEN_HEIGHT)
+bullet = Bullet(list(cannon.get_main_point()))
+target = Target()
+
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -38,7 +43,15 @@ while running:
                 mario_x += speed
 
     screen.fill((0, 0, 0))
-    screen.blit(current_hero_frame, (mario_x, mario_y))
+    cannon.draw(screen)
+
+    if bullet.get_center()[1] + bullet.get_radius() <= 0:
+        bullet = Bullet(list(cannon.get_main_point()))
+    else:
+        bullet.move(screen)
+
+    target.move(screen, SCREEN_WIDTH)
+
     frame_counter += 1
 
     if frame_counter == 60:
