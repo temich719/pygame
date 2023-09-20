@@ -1,7 +1,9 @@
 import pygame
 import sys
 from models import Cannon, Bullet, Target
+from utils import calc_distance, point_in_circle, place_circle
 
+pygame.mixer.init(22050, -16, 2, 64)
 pygame.init()
 
 SCREEN_WIDTH = 400
@@ -11,6 +13,9 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 
 start_frame_mario_position = pygame.image.load('images/0.png')
+circle_center = place_circle()
+shot = pygame.mixer.Sound('sounds/shot.wav')
+score = 0
 mario_x = 20
 mario_y = 20
 
