@@ -35,8 +35,14 @@ class Snake:
     def add_block(self):
         self.__new_block = True
 
+    @staticmethod
+    def __are_opposite(first_vector, second_vector):
+        scalar_product = first_vector.x * second_vector.x + first_vector.y * second_vector.y
+        return scalar_product == -1
+
     def change_direction(self, direction):
-        self.__direction = direction
+        if not self.__are_opposite(self.__direction, direction):
+            self.__direction = direction
 
     def get_head_pos(self):
         head = self.__body[0]
