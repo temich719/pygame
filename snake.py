@@ -11,6 +11,7 @@ class Snake:
     def __init__(self):
         self.__body = [Vector2(5, 10), Vector2(6, 10), Vector2(7, 10)]
         self.__direction = Vector2(1, 0)
+        self.__new_block = False
 
     def draw_snake(self, surface):
         for block in self.__body:
@@ -21,20 +22,32 @@ class Snake:
             self.__rect = block_rect
 
     def move_snake(self):
-        body_copy = self.__body[:-1]
-        body_copy.insert(0, body_copy[0] + self.__direction)
-        self.__body = body_copy[:]
+        if self.__new_block:
+            body_copy = self.__body[:]
+            body_copy.insert(0, body_copy[0] + self.__direction)
+            self.__body = body_copy[:]
+            self.__new_block = False
+        else:
+            body_copy = self.__body[:-1]
+            body_copy.insert(0, body_copy[0] + self.__direction)
+            self.__body = body_copy[:]
+
+    def add_block(self):
+        self.__new_block = True
 
     def change_direction(self, direction):
         self.__direction = direction
 
     def get_head_pos(self):
-        return self.__body[0]
+        head = self.__body[0]
+        # duplicate code
+        x = int(head.x * self.__CELL_SIZE)
+        y = int(head.y * self.__CELL_SIZE)
+        return Vector2(x, y)
 
     def get_rect(self):
         return self.__rect
 
-    @staticmethod
     def get_cell_size(self):
         return self.__CELL_SIZE
 
@@ -63,6 +76,9 @@ class Fruit:
 
     def change_pos(self):
         self.__pos = self.__generate_pos()
+
+    def get_fruit_size(self):
+        return self.__FRUIT_SIZE
 
     def get_pos(self):
         return self.__pos
