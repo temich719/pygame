@@ -2,12 +2,14 @@ import pygame
 import sys
 from models import Cannon, Bullet, Target
 from utils import point_in_circle, place_circle, Circle
+from snake import Snake, Fruit
+from pygame.math import Vector2
 
 pygame.mixer.init(22050, -16, 2, 64)
 pygame.init()
 
-SCREEN_WIDTH = 400
-SCREEN_HEIGHT = 400
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 800
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
@@ -39,12 +41,26 @@ score_font = pygame.font.Font(None, 36)
 crosshair_color = pygame.color.THECOLORS['red']
 pygame.mouse.set_visible(False)
 
+SCREEN_UPDATE = pygame.USEREVENT
+pygame.time.set_timer(SCREEN_UPDATE, 150)
+
+snake = Snake()
+fruit = Fruit(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
 while running:
     mouse_x, mouse_y = pygame.mouse.get_pos()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+            terminate()
+
+        if event.type == SCREEN_UPDATE:
+            snake.move_snake()
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if point_in_circle((mouse_x, mouse_y), circle.get_center(), circle.get_radius()):
@@ -63,36 +79,24 @@ while running:
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                current_hero_frame = left_animations_list[frame_counter // 12]
-                mario_x -= speed
+                snake.change_direction(Vector2(-1, 0))
 
             elif event.key == pygame.K_RIGHT:
-                current_hero_frame = right_animations_list[frame_counter // 12]
-                mario_x += speed
+                snake.change_direction(Vector2(1, 0))
 
             elif event.key == pygame.K_UP:
-                current_hero_frame = left_animations_list[frame_counter // 12]
-                mario_y -= speed
+                snake.change_direction(Vector2(0, -1))
 
             elif event.key == pygame.K_DOWN:
-                current_hero_frame = right_animations_list[frame_counter // 12]
-                mario_y += speed
+                snake.change_direction(Vector2(0, 1))
 
     screen.fill((0, 0, 0))
-    score_label = score_font.render(f'Score: {score}', True, pygame.color.THECOLORS['white'])
-    screen.blit(score_label, (100, 100))
-    screen.blit(current_hero_frame, (mario_x, mario_y))
-    circle.draw_circle(screen)
-    pygame.draw.line(screen, crosshair_color, (mouse_x - 10, mouse_y), (mouse_x + 10, mouse_y), 2)
-    pygame.draw.line(screen, crosshair_color, (mouse_x, mouse_y - 10), (mouse_x, mouse_y + 10), 2)
-    cannon.draw(screen)
-
-    if bullet.get_center()[1] + bullet.get_radius() <= 0:
-        bullet = Bullet(list(cannon.get_main_point()))
-    else:
-        bullet.move(screen)
-
-    target.move(screen, SCREEN_WIDTH)
+    snake.draw_snake(screen)
+    fruit.draw_fruit(screen)
+    snake_rect = snake.get_rect()
+    fruit_rect = fruit.get_rect()
+    if snake_rect.colliderect(fruit_rect):
+        fruit.change_pos()
 
     frame_counter += 1
 
