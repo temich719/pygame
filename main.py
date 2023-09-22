@@ -17,6 +17,11 @@ snake_eat_sound = pygame.mixer.Sound('sounds/snakeEat.mp3')
 running = True
 
 score_font = pygame.font.Font(None, 36)
+game_over_font = pygame.font.Font(None, 100)
+text = game_over_font.render("GAME OVER!", True, (255, 0, 0))
+text_rect = text.get_rect()
+text_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
+
 pygame.mouse.set_visible(False)
 
 SCREEN_UPDATE = pygame.USEREVENT
@@ -29,6 +34,9 @@ fruit = Fruit(SCREEN_WIDTH, SCREEN_HEIGHT)
 def terminate():
     pygame.quit()
     sys.exit()
+
+
+GAME_OVER = False
 
 
 while running:
@@ -53,14 +61,24 @@ while running:
                 snake.change_direction(Vector2(0, 1))
 
     screen.fill((0, 0, 0))
-    snake.draw_snake(screen)
-    fruit.draw_fruit(screen)
 
-    distance = (snake.get_head_pos() - fruit.get_pos()).length()
+    if GAME_OVER:
+        screen.blit(text, text_rect)
+    else:
+        snake.draw_snake(screen)
+        fruit.draw_fruit(screen)
+
+    snake_pos = snake.get_head_pos()
+
+    # this is shit in def
+    distance = (snake_pos - fruit.get_pos()).length()
     if distance < snake.get_cell_size():
         snake_eat_sound.play()
         fruit.change_pos()
         snake.add_block()
+
+    if snake_pos.x < 0 or snake_pos.x > SCREEN_WIDTH - snake.get_cell_size() or snake_pos.y < 0 or snake_pos.y > SCREEN_HEIGHT - snake.get_cell_size():
+        GAME_OVER = True
 
     pygame.display.flip()
     clock.tick(60)
