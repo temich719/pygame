@@ -39,6 +39,8 @@ def terminate():
 
 
 GAME_OVER = False
+play_again_button = pygame.Rect(SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 + 50, 400, 80)
+exit_button = pygame.Rect(SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 + 135, 400, 80)
 
 
 while running:
@@ -55,6 +57,14 @@ while running:
 
         if event.type == SCREEN_UPDATE:
             snake.move_snake()
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if play_again_button.collidepoint(event.pos):
+                GAME_OVER = False
+                snake = Snake()
+                fruit = Fruit(SCREEN_WIDTH, SCREEN_HEIGHT)
+            elif exit_button.collidepoint(event.pos):
+                terminate()
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:

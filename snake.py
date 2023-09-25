@@ -74,7 +74,7 @@ class Fruit:
 
     def draw_fruit(self, surface):
         rect = pygame.Rect(self.__pos.x, self.__pos.y, self.__FRUIT_SIZE, self.__FRUIT_SIZE)
-        pygame.draw.rect(surface, THECOLORS['yellow'], rect, width=0)
+        pygame.draw.rect(surface, THECOLORS['yellow'], rect, border_radius=50, width=0)
         self.__rect = rect
 
     def get_rect(self):

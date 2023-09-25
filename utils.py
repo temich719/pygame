@@ -25,6 +25,7 @@ def draw_button(x, y, width, height, text, surface):
     text_surface = label_font.render(text, True, THECOLORS['white'])
     text_rect = text_surface.get_rect(center=button_rect.center)
     surface.blit(text_surface, text_rect)
+    return text_rect
 
 
 class Circle:
