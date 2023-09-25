@@ -2,6 +2,7 @@ import pygame
 import sys
 from snake import Snake, Fruit
 from pygame.math import Vector2
+from utils import draw_button
 
 pygame.mixer.init(22050, -16, 2, 64)
 pygame.init()
@@ -17,6 +18,7 @@ snake_eat_sound = pygame.mixer.Sound('sounds/snakeEat.mp3')
 running = True
 
 score_font = pygame.font.Font(None, 36)
+
 game_over_font = pygame.font.Font(None, 100)
 text = game_over_font.render("GAME OVER!", True, (255, 0, 0))
 text_rect = text.get_rect()
@@ -40,6 +42,13 @@ GAME_OVER = False
 
 
 while running:
+    mouse_x, mouse_y = pygame.mouse.get_pos()
+
+    if SCREEN_WIDTH // 2 - 200 <= mouse_x <= SCREEN_WIDTH // 2 + 200 and SCREEN_HEIGHT // 2 + 50 <= mouse_y <= SCREEN_HEIGHT // 2 + 215:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+    else:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             terminate()
@@ -64,6 +73,9 @@ while running:
 
     if GAME_OVER:
         screen.blit(text, text_rect)
+        draw_button(SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 + 50, 400, 80, 'Play again', screen)
+        draw_button(SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 + 135, 400, 80, 'Exit', screen)
+        pygame.mouse.set_visible(True)
     else:
         snake.draw_snake(screen)
         fruit.draw_fruit(screen)
