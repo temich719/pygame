@@ -12,6 +12,7 @@ class Snake:
         self.__body = [Vector2(5, 10), Vector2(6, 10), Vector2(7, 10)]
         self.__direction = Vector2(1, 0)
         self.__new_block = False
+        # self.__head = self.__body[0]
 
     def draw_snake(self, surface):
         for block in self.__body:
@@ -19,7 +20,7 @@ class Snake:
             y = int(block.y * self.__CELL_SIZE)
             block_rect = pygame.Rect(x, y, self.__CELL_SIZE, self.__CELL_SIZE)
             pygame.draw.rect(surface, THECOLORS['green'], block_rect)
-            self.__rect = block_rect
+            # self.__rect = block_rect
 
     def move_snake(self):
         if self.__new_block:
@@ -31,6 +32,7 @@ class Snake:
             body_copy = self.__body[:-1]
             body_copy.insert(0, body_copy[0] + self.__direction)
             self.__body = body_copy[:]
+        # self.__head = self.__body[0]
 
     def add_block(self):
         self.__new_block = True
@@ -51,11 +53,22 @@ class Snake:
         y = int(head.y * self.__CELL_SIZE)
         return Vector2(x, y)
 
+    def __get_head_coordinates(self):
+        head = self.__body[0]
+        return Vector2(head.x, head.y)
+
     def get_rect(self):
         return self.__rect
 
     def get_cell_size(self):
         return self.__CELL_SIZE
+
+    def get_snake_len(self):
+        return self.__body.__len__()
+
+    def check_head_and_body_collision(self):
+        head_coordinates = self.__get_head_coordinates()
+        return self.__body.count(head_coordinates) > 1
 
 
 class Fruit:

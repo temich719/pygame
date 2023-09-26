@@ -27,7 +27,7 @@ text_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 pygame.mouse.set_visible(False)
 
 SCREEN_UPDATE = pygame.USEREVENT
-pygame.time.set_timer(SCREEN_UPDATE, 150)
+pygame.time.set_timer(SCREEN_UPDATE, 120)
 
 snake = Snake()
 fruit = Fruit(SCREEN_WIDTH, SCREEN_HEIGHT)
@@ -99,7 +99,10 @@ while running:
         fruit.change_pos()
         snake.add_block()
 
-    if snake_pos.x < 0 or snake_pos.x > SCREEN_WIDTH - snake.get_cell_size() or snake_pos.y < 0 or snake_pos.y > SCREEN_HEIGHT - snake.get_cell_size():
+    if ((snake_pos.x < 0
+            or snake_pos.x > SCREEN_WIDTH - snake.get_cell_size()
+            or snake_pos.y < 0 or snake_pos.y > SCREEN_HEIGHT - snake.get_cell_size())
+            or (snake.check_head_and_body_collision() and snake.get_snake_len() > 3)):
         GAME_OVER = True
 
     pygame.display.flip()
