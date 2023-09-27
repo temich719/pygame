@@ -1,5 +1,6 @@
 import pygame
 import sys
+import json
 from snake import Snake, Fruit
 from pygame.math import Vector2
 from utils import draw_button
@@ -9,13 +10,17 @@ SCREEN_HEIGHT = 800
 RUNNING = True
 SCREEN_UPDATE = pygame.USEREVENT
 GAME_OVER = False
+BEST_SCORE_JSON = 'best_score.json'
 
 pygame.mixer.init(22050, -16, 2, 64)
 pygame.init()
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
 snake_eat_sound = pygame.mixer.Sound('sounds/snakeEat.mp3')
-score_font = pygame.font.Font(None, 36)
+total_score = 0
+best_score = int()
+score_font = pygame.font.Font(None, 80)
+best_score_font = pygame.font.Font(None, 60)
 game_over_font = pygame.font.Font(None, 100)
 text = game_over_font.render("GAME OVER!", True, (255, 0, 0))
 text_rect = text.get_rect()
@@ -33,6 +38,23 @@ def terminate():
     sys.exit()
 
 
+def set_start_best_score():
+    try:
+        with open(BEST_SCORE_JSON, 'r') as file:
+            global best_score
+            best_score = json.load(file)
+    except FileNotFoundError:
+        best_score = 0
+
+
+def set_new_best_score():
+    global total_score, best_score
+    if total_score > best_score:
+        best_score = total_score
+        with open(BEST_SCORE_JSON, 'w') as file:
+            json.dump(best_score, file)
+
+
 def change_cursor(x, y):
     if SCREEN_WIDTH // 2 - 200 <= x <= SCREEN_WIDTH // 2 + 200 and SCREEN_HEIGHT // 2 + 50 <= y <= SCREEN_HEIGHT // 2 + 215:
         pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
@@ -48,8 +70,10 @@ def play_again():
 
 
 def eat_fruit():
+    global total_score
     distance = (snake_pos - fruit.get_pos()).length()
     if distance < snake.get_cell_size():
+        total_score += 1
         snake_eat_sound.play()
         fruit.change_pos()
         snake.add_block()
@@ -57,7 +81,17 @@ def eat_fruit():
 
 def game_over():
     global text, text_rect
+    set_start_best_score()
+    set_new_best_score()
+    bs_text = best_score_font.render(f"Best score: {best_score}", True, (255, 255, 255))
+    bs_rect = bs_text.get_rect()
+    bs_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 250)
+    score_text = score_font.render(f"Score is: {total_score}", True, (255, 255, 255))
+    score_rect = score_text.get_rect()
+    score_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 150)
     screen.blit(text, text_rect)
+    screen.blit(score_text, score_rect)
+    screen.blit(bs_text, bs_rect)
     draw_button(SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 + 50, 400, 80, 'Play again', screen)
     draw_button(SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 + 135, 400, 80, 'Exit', screen)
     pygame.mouse.set_visible(True)
@@ -109,9 +143,9 @@ while RUNNING:
     else:
         snake.draw_snake(screen)
         fruit.draw_fruit(screen)
+        snake_pos = snake.get_head_pos()
+        eat_fruit()
+        check_game_over_condition()
 
-    snake_pos = snake.get_head_pos()
-    eat_fruit()
-    check_game_over_condition()
     pygame.display.flip()
     clock.tick(60)
