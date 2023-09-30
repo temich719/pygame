@@ -1,103 +1,151 @@
 import pygame
 import sys
-from models import Cannon, Bullet, Target
-from utils import point_in_circle, place_circle, Circle
+import json
+from snake import Snake, Fruit
+from pygame.math import Vector2
+from utils import draw_button
+
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 800
+RUNNING = True
+SCREEN_UPDATE = pygame.USEREVENT
+GAME_OVER = False
+BEST_SCORE_JSON = 'best_score.json'
 
 pygame.mixer.init(22050, -16, 2, 64)
 pygame.init()
-
-SCREEN_WIDTH = 400
-SCREEN_HEIGHT = 400
-
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 clock = pygame.time.Clock()
-
-start_frame_mario_position = pygame.image.load('images/0.png')
-circle_center = place_circle()
-shot = pygame.mixer.Sound('sounds/shot.wav')
-score = 0
-mario_x = 20
-mario_y = 60
-
-left_animations_list = [pygame.image.load(f'images/l{i}.png') for i in range(1, 6)]
-right_animations_list = [pygame.image.load(f'images/r{i}.png') for i in range(1, 6)]
-
-frame_counter = 0
-running = True
-current_hero_frame = start_frame_mario_position
-speed = 10
-
-cannon = Cannon(SCREEN_WIDTH, SCREEN_HEIGHT)
-bullet = Bullet(list(cannon.get_main_point()))
-target = Target()
-circle = Circle(circle_center)
-
-start_time = pygame.time.get_ticks()
-end_time = None
-
-score_font = pygame.font.Font(None, 36)
-crosshair_color = pygame.color.THECOLORS['red']
+snake_eat_sound = pygame.mixer.Sound('sounds/snakeEat.mp3')
+total_score = 0
+best_score = int()
+score_font = pygame.font.Font(None, 80)
+best_score_font = pygame.font.Font(None, 60)
+game_over_font = pygame.font.Font(None, 100)
+text = game_over_font.render("GAME OVER!", True, (255, 0, 0))
+text_rect = text.get_rect()
+text_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2)
 pygame.mouse.set_visible(False)
+pygame.time.set_timer(SCREEN_UPDATE, 120)
+snake = Snake()
+fruit = Fruit(SCREEN_WIDTH, SCREEN_HEIGHT)
+play_again_button = pygame.Rect(SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 + 50, 400, 80)
+exit_button = pygame.Rect(SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 + 135, 400, 80)
 
-while running:
+
+def terminate():
+    pygame.quit()
+    sys.exit()
+
+
+def set_start_best_score():
+    try:
+        with open(BEST_SCORE_JSON, 'r') as file:
+            global best_score
+            best_score = json.load(file)
+    except FileNotFoundError:
+        best_score = 0
+
+
+def set_new_best_score():
+    global total_score, best_score
+    if total_score > best_score:
+        best_score = total_score
+        with open(BEST_SCORE_JSON, 'w') as file:
+            json.dump(best_score, file)
+
+
+def change_cursor(x, y):
+    if SCREEN_WIDTH // 2 - 200 <= x <= SCREEN_WIDTH // 2 + 200 and SCREEN_HEIGHT // 2 + 50 <= y <= SCREEN_HEIGHT // 2 + 215:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_HAND)
+    else:
+        pygame.mouse.set_cursor(pygame.SYSTEM_CURSOR_ARROW)
+
+
+def play_again():
+    global GAME_OVER, snake, fruit
+    GAME_OVER = False
+    snake = Snake()
+    fruit = Fruit(SCREEN_WIDTH, SCREEN_HEIGHT)
+
+
+def eat_fruit():
+    global total_score
+    distance = (snake_pos - fruit.get_pos()).length()
+    if distance < snake.get_cell_size():
+        total_score += 1
+        snake_eat_sound.play()
+        fruit.change_pos()
+        snake.add_block()
+
+
+def game_over():
+    global text, text_rect
+    set_start_best_score()
+    set_new_best_score()
+    bs_text = best_score_font.render(f"Best score: {best_score}", True, (255, 255, 255))
+    bs_rect = bs_text.get_rect()
+    bs_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 250)
+    score_text = score_font.render(f"Score is: {total_score}", True, (255, 255, 255))
+    score_rect = score_text.get_rect()
+    score_rect.center = (SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 - 150)
+    screen.blit(text, text_rect)
+    screen.blit(score_text, score_rect)
+    screen.blit(bs_text, bs_rect)
+    draw_button(SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 + 50, 400, 80, 'Play again', screen)
+    draw_button(SCREEN_WIDTH // 2 - 200, SCREEN_HEIGHT // 2 + 135, 400, 80, 'Exit', screen)
+    pygame.mouse.set_visible(True)
+
+
+def check_game_over_condition():
+    global GAME_OVER
+    if ((snake_pos.x < 0
+            or snake_pos.x > SCREEN_WIDTH - snake.get_cell_size()
+            or snake_pos.y < 0 or snake_pos.y > SCREEN_HEIGHT - snake.get_cell_size())
+            or (snake.check_head_and_body_collision() and snake.get_snake_len() > 3)):
+        GAME_OVER = True
+
+
+while RUNNING:
     mouse_x, mouse_y = pygame.mouse.get_pos()
+    change_cursor(mouse_x, mouse_y)
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            pygame.quit()
-            sys.exit()
+            terminate()
+
+        if event.type == SCREEN_UPDATE:
+            snake.move_snake()
 
         if event.type == pygame.MOUSEBUTTONDOWN:
-            if point_in_circle((mouse_x, mouse_y), circle.get_center(), circle.get_radius()):
-                end_time = pygame.time.get_ticks()
-                if end_time - start_time <= 1000:
-                    score += 100
-                elif end_time - start_time <= 2000:
-                    score += 50
-                else:
-                    score += 1
-
-                shot.play()
-                circle.set_center(place_circle())
-                start_time = pygame.time.get_ticks()
-                end_time = None
+            if play_again_button.collidepoint(event.pos):
+                play_again()
+            elif exit_button.collidepoint(event.pos):
+                terminate()
 
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_LEFT:
-                current_hero_frame = left_animations_list[frame_counter // 12]
-                mario_x -= speed
+                snake.change_direction(Vector2(-1, 0))
 
             elif event.key == pygame.K_RIGHT:
-                current_hero_frame = right_animations_list[frame_counter // 12]
-                mario_x += speed
+                snake.change_direction(Vector2(1, 0))
 
             elif event.key == pygame.K_UP:
-                current_hero_frame = left_animations_list[frame_counter // 12]
-                mario_y -= speed
+                snake.change_direction(Vector2(0, -1))
 
             elif event.key == pygame.K_DOWN:
-                current_hero_frame = right_animations_list[frame_counter // 12]
-                mario_y += speed
+                snake.change_direction(Vector2(0, 1))
 
     screen.fill((0, 0, 0))
-    score_label = score_font.render(f'Score: {score}', True, pygame.color.THECOLORS['white'])
-    screen.blit(score_label, (100, 100))
-    screen.blit(current_hero_frame, (mario_x, mario_y))
-    circle.draw_circle(screen)
-    pygame.draw.line(screen, crosshair_color, (mouse_x - 10, mouse_y), (mouse_x + 10, mouse_y), 2)
-    pygame.draw.line(screen, crosshair_color, (mouse_x, mouse_y - 10), (mouse_x, mouse_y + 10), 2)
-    cannon.draw(screen)
 
-    if bullet.get_center()[1] + bullet.get_radius() <= 0:
-        bullet = Bullet(list(cannon.get_main_point()))
+    if GAME_OVER:
+        game_over()
     else:
-        bullet.move(screen)
-
-    target.move(screen, SCREEN_WIDTH)
-
-    frame_counter += 1
-
-    if frame_counter == 60:
-        frame_counter = 0
+        snake.draw_snake(screen)
+        fruit.draw_fruit(screen)
+        snake_pos = snake.get_head_pos()
+        eat_fruit()
+        check_game_over_condition()
 
     pygame.display.flip()
     clock.tick(60)

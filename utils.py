@@ -18,6 +18,16 @@ def place_circle():
     return x, y
 
 
+def draw_button(x, y, width, height, text, surface):
+    button_rect = pygame.Rect(x, y, width, height)
+    pygame.draw.rect(surface, (77, 97, 98), button_rect, border_radius=10)
+    label_font = pygame.font.Font(None, 32)
+    text_surface = label_font.render(text, True, THECOLORS['white'])
+    text_rect = text_surface.get_rect(center=button_rect.center)
+    surface.blit(text_surface, text_rect)
+    return text_rect
+
+
 class Circle:
     __RADIUS = 15
     __COLOR = THECOLORS['blue']
